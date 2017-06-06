@@ -3,13 +3,6 @@ import logo from './logo.svg';
 import './App.css';
 
 
-class CitySelector extends Component {
-  render () {
-
-    return ()
-  }
-}
-
 class App extends Component {
   render() {
     return (
@@ -19,13 +12,10 @@ class App extends Component {
           <h2>Air Pollution Data Navigator</h2>
         </div>
         <p className="App-intro">
-          Please Select a City.
+          Please Select a Location.
         </p>
         <form>
-          <select className="App-intro">
-            <option value="bristol">Bristol</option>
-            <option value="bath">Bath</option>
-          </select>
+          <CitySelector results={this.props.data.results}/>
           <p className="App-intro">
           Select the Measurement type.
         </p>
@@ -44,6 +34,20 @@ class App extends Component {
         </div>
       </div>
     );
+  }
+}
+
+
+class CitySelector extends Component {
+  render () {
+
+    return (<select className="App-intro">
+            {this.props.results.map((item) => (
+              <option value={item.city}>
+              {item.location}
+              </option>
+              ))}
+          </select>);
   }
 }
 
@@ -118,3 +122,4 @@ var DATA = {
 }
 
 export default App;
+export {DATA};
