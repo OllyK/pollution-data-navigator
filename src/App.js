@@ -13,7 +13,7 @@ class App extends Component {
       hasErrored: false,
       isLoading: false,
       citiesList: {"results": []},
-      locationInfo: {}
+      locationInfo: {"results": []}
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleMeasureChange = this.handleMeasureChange.bind(this);
@@ -47,7 +47,7 @@ class App extends Component {
           if (location === false) {
             this.setState({ citiesList: items })
           }
-          this.setState({ locationInfo: items })
+          else {this.setState({ locationInfo: items })}
         })
         .catch(() => this.setState({ hasErrored: true }));
   }
@@ -88,6 +88,7 @@ class App extends Component {
                   onChange={this.handleChange} />
                  </form>
                 <LocationInfo area={this.filterCitiesList()}
+                              locData={this.state.locationInfo.results}
                               onLocationClick={this.handleLocationClick} />
               </div>
             );
@@ -123,13 +124,14 @@ class LocationInfo extends Component {
               <br />
                 There are currently {this.props.area[0].locations} locations in {this.props.area[0].city}
               <br />
-              <GetLocationInfo onLocationClick={this.props.onLocationClick}/>
+              <GetLocationInfoButton onLocationClick={this.props.onLocationClick}/>
+              <LocationInfoDisplay locData={this.props.locData}/>
             </div>);
 
       }
     }
 
-class GetLocationInfo extends Component {
+class GetLocationInfoButton extends Component {
 
 
   render () {
@@ -142,6 +144,33 @@ class GetLocationInfo extends Component {
                   </div>);
       }
     }
+
+
+class LocationInfoDisplay extends Component {
+
+
+  render () {
+          return (<div >
+                  <br />
+                  <table className="Table">
+                      <tr>
+                        <th>Location Name</th>
+                        <th>Coordinates</th>
+                        <th>Sensors</th>
+                      </tr>
+                      {this.props.locData.map((item) => (
+                    <tr value={item.location} key={item.location}>
+                      <td>{item.location}</td>
+                      <td>{item.coordinates.latitude}, {item.coordinates.longitude}</td>
+                      <td>{item.parameters.toString()}</td>
+                    </tr>
+                  ))}
+                    </table>
+
+                  </div>);
+      }
+    }
+
 
 class CitySelector extends Component {
 
