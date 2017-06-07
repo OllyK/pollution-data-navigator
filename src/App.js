@@ -12,10 +12,12 @@ class App extends Component {
       measurementSelected: '',
       hasErrored: false,
       isLoading: false,
-      citiesList: {"results": []}
+      citiesList: {"results": []},
+      locationInfo: {}
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleMeasureChange = this.handleMeasureChange.bind(this);
+    this.handleLocationClick = this.handleLocationClick.bind(this);
   }
 
   handleChange(e) {
@@ -27,10 +29,10 @@ class App extends Component {
   }
 
   handleLocationClick(e) {
-      this.setState({measurementSelected: e.target.value});
+    this.fetchData('https://api.openaq.org/v1/locations?city[]=' + this.state.areaSelected, true)
   }
 
-  fetchData(url) {
+  fetchData(url, location) {
     this.setState({ isLoading: true });
     fetch(url)
         .then((response) => {
@@ -41,18 +43,23 @@ class App extends Component {
             return response;
         })
         .then((response) => response.json())
-        .then((citiesList) => this.setState({ citiesList: citiesList })) // ES6 property value shorthand for { items: items }
+        .then((items) => {
+          if (location === false) {
+            this.setState({ citiesList: items })
+          }
+          this.setState({ locationInfo: items })
+        })
         .catch(() => this.setState({ hasErrored: true }));
   }
 
   componentDidMount() {
-        this.fetchData('https://api.openaq.org/v1/cities?country=GB&limit=1000');
+        this.fetchData('https://api.openaq.org/v1/cities?country=GB&limit=1000', false);
     }
 
 
   filterCitiesList() {
 
-      return this.state.citiesList.results.filter((item) => item.city == this.state.areaSelected)
+      return this.state.citiesList.results.filter((item) => item.city === this.state.areaSelected)
   }
 
   render() {
@@ -75,12 +82,13 @@ class App extends Component {
                 <p className="App-intro">
                   First Select an Area.
                 </p>
-                <form onSubmit={() => alert("Submitted")}>
+                <form>
                   <CitySelector
                   results={this.state.citiesList.results}
                   onChange={this.handleChange} />
                  </form>
-                <LocationInfo area={this.filterCitiesList()} />
+                <LocationInfo area={this.filterCitiesList()}
+                              onLocationClick={this.handleLocationClick} />
               </div>
             );
   }
@@ -107,7 +115,7 @@ class LocationInfo extends Component {
 
   render () {
 
-      if (typeof this.props.area[0] == 'undefined') {
+      if (typeof this.props.area[0] === 'undefined') {
         return <div></div>
       }
       return (
@@ -115,7 +123,7 @@ class LocationInfo extends Component {
               <br />
                 There are currently {this.props.area[0].locations} locations in {this.props.area[0].city}
               <br />
-              <GetLocationInfo />
+              <GetLocationInfo onLocationClick={this.props.onLocationClick}/>
             </div>);
 
       }
@@ -123,16 +131,12 @@ class LocationInfo extends Component {
 
 class GetLocationInfo extends Component {
 
-  handleClick (e) {
-    e.preventDefault();
-     alert('button pressed')
-  }
 
   render () {
           return (<div>
                   <br />
                     <button className="App-intro"
-                            onClick={() => this.handleClick}>
+                            onClick={this.props.onLocationClick}>
                       Get location information
                     </button>
                   </div>);
@@ -151,7 +155,7 @@ class CitySelector extends Component {
               Please Select
               </option>
             {this.props.results.map((item) => (
-              <option value={item.city}>
+              <option value={item.city} key={item.city}>
               {item.city}
               </option>
               ))}
