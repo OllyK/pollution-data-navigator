@@ -26,6 +26,10 @@ class App extends Component {
       this.setState({measurementSelected: e.target.value});
   }
 
+  handleLocationClick(e) {
+      this.setState({measurementSelected: e.target.value});
+  }
+
   fetchData(url) {
     this.setState({ isLoading: true });
     fetch(url)
@@ -54,38 +58,29 @@ class App extends Component {
   render() {
 
     if (this.state.hasErrored) {
-            return <AppHeader message="Sorry! There was an error loading the items"/>;
+            return ( <div className="App">
+                    <AppHeader message="Sorry! There was an error loading the items"/>
+                    </div>);
         }
 
     if (this.state.isLoading) {
-            return <AppHeader message="Loading..."/>;
+            return (<div className="App">
+                    <AppHeader message="Loading..."/>
+                    </div>);
         }
 
     return (
               <div className="App">
-                <div className="App-header">
-                  <img src={lungs} className="App-logo" alt="logo" />
-                  <h2>Air Pollution Data Navigator</h2>
-                </div>
+                <AppHeader />
                 <p className="App-intro">
                   First Select an Area.
                 </p>
-                <form>
+                <form onSubmit={() => alert("Submitted")}>
                   <CitySelector
                   results={this.state.citiesList.results}
                   onChange={this.handleChange} />
+                 </form>
                 <LocationInfo area={this.filterCitiesList()} />
-                  <p className="App-intro">
-                  Select the Measurement Type.
-                </p>
-                  <select className="App-intro" onChange={this.handleMeasureChange}>
-                    <option value="no2">Nitrogen Dioxide</option>
-                    <option value="o3">Ozone</option>
-                    <option value="pm10">Particles &lt; 10&#956;m</option>
-                    <option value="pm10">Particles &lt; 25&#956;m</option>
-                  </select>
-                </form>
-                <DataOutput />
               </div>
             );
   }
@@ -97,22 +92,18 @@ class AppHeader extends Component {
   render () {
 
     return (
-            <div className="App">
               <div className="App-header">
                 <img src={lungs} className="App-logo" alt="logo" />
                 <h2>Air Pollution Data Navigator</h2>
+                 <p>{this.props.message}</p>
               </div>
-                <p>{this.props.message}</p>
-            </div>);
-      }
+
+                );
+            }
 }
 
 
 class LocationInfo extends Component {
-
-  static defaultProps = {
-        "area": [{"locations": null}]
-        };
 
   render () {
 
@@ -123,11 +114,30 @@ class LocationInfo extends Component {
               <div className="App-intro">
               <br />
                 There are currently {this.props.area[0].locations} locations in {this.props.area[0].city}
-            </div>)
+              <br />
+              <GetLocationInfo />
+            </div>);
 
       }
     }
 
+class GetLocationInfo extends Component {
+
+  handleClick (e) {
+    e.preventDefault();
+     alert('button pressed')
+  }
+
+  render () {
+          return (<div>
+                  <br />
+                    <button className="App-intro"
+                            onClick={() => this.handleClick}>
+                      Get location information
+                    </button>
+                  </div>);
+      }
+    }
 
 class CitySelector extends Component {
 
@@ -149,9 +159,6 @@ class CitySelector extends Component {
           );
   }
 }
-
-
-
 
 class DataOutput extends Component {
 
