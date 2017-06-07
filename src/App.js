@@ -84,6 +84,7 @@ class App extends Component {
                 </p>
                 <form>
                   <CitySelector
+                  area={this.state.areaSelected}
                   results={this.state.citiesList.results}
                   onChange={this.handleChange} />
                  </form>
@@ -184,9 +185,13 @@ class CitySelector extends Component {
               Please Select
               </option>
             {this.props.results.map((item) => (
-              <option value={item.city} key={item.city}>
-              {item.city}
+
+              <option value={item.city} key={item.city}
+                      selected={this.props.area === item.city ? "selected" : null}>
+                  {item.city}
               </option>
+
+
               ))}
           </select>
           );
