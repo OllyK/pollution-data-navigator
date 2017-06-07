@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import lungs from './lungs.svg';
+import {LocationInfo, GetLocationInfoButton, LocationInfoDisplay} from './location.js';
 import './App.css';
 
 
@@ -8,119 +9,123 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
-      locationSelected: '',
+      areaSelected: '',
       measurementSelected: '',
-      apiData : {
-                      "meta": {
-                        "name": "openaq-api",
-                        "license": "CC BY 4.0",
-                        "website": "https://docs.openaq.org/",
-                        "page": 1,
-                        "limit": 100,
-                        "found": 2
-                      },
-                      "results": [
-                        {
-                          "location": "Bath Roadside",
-                          "city": "Bath",
-                          "country": "GB",
-                          "measurements": [
-                            {
-                              "parameter": "no2",
-                              "value": 3,
-                              "lastUpdated": "2017-06-06T04:00:00.000Z",
-                              "unit": "µg/m³",
-                              "sourceName": "DEFRA"
-                            }
-                          ],
-                          "coordinates": {
-                            "latitude": 51.391127,
-                            "longitude": -2.354155
-                          }
-                        },
-                        {
-                          "location": "Bristol St Paul's",
-                          "city": "Bristol",
-                          "country": "GB",
-                          "measurements": [
-                            {
-                              "parameter": "no2",
-                              "value": 1,
-                              "lastUpdated": "2017-06-06T04:00:00.000Z",
-                              "unit": "µg/m³",
-                              "sourceName": "DEFRA"
-                            },
-                            {
-                              "parameter": "o3",
-                              "value": 61,
-                              "lastUpdated": "2017-06-06T04:00:00.000Z",
-                              "unit": "µg/m³",
-                              "sourceName": "DEFRA"
-                            },
-                            {
-                              "parameter": "pm10",
-                              "value": 8,
-                              "lastUpdated": "2017-06-06T04:00:00.000Z",
-                              "unit": "µg/m³",
-                              "sourceName": "DEFRA"
-                            },
-                            {
-                              "parameter": "pm25",
-                              "value": 4,
-                              "lastUpdated": "2017-06-06T04:00:00.000Z",
-                              "unit": "µg/m³",
-                              "sourceName": "DEFRA"
-                            }
-                          ],
-                          "coordinates": {
-                            "latitude": 51.462839,
-                            "longitude": -2.584482
-                          }
-                        }
-                      ]
-                    }
+      hasErrored: false,
+      isLoading: false,
+      citiesList: {"results": []},
+      locationInfo: {"results": []},
+      measurementInfo: {"results": [{"measurements": []}]}
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleMeasureChange = this.handleMeasureChange.bind(this);
+    this.handleLocationClick = this.handleLocationClick.bind(this);
+    this.handleMeasureClick = this.handleMeasureClick.bind(this);
   }
 
   handleChange(e) {
-      this.setState({locationSelected: e.target.value});
+      this.setState({areaSelected: e.target.value});
   }
 
   handleMeasureChange(e) {
       this.setState({measurementSelected: e.target.value});
   }
 
+  handleLocationClick(e) {
+    this.fetchData('https://api.openaq.org/v1/locations?city[]=' + this.state.areaSelected, 'location')
+  }
+  handleMeasureClick (e) {
+    this.fetchData('https://api.openaq.org/v1/latest?location=' + e.target.parentNode.getAttribute("value"), 'measurements')
+  }
+
+  fetchData(url, type) {
+    this.setState({ isLoading: true });
+    fetch(url)
+        .then((response) => {
+            if (!response.ok) {
+                throw Error(response.statusText);
+            }
+            this.setState({ isLoading: false });
+            return response;
+        })
+        .then((response) => response.json())
+        .then((items) => {
+          switch (type) {
+            case 'cities':
+              this.setState({ citiesList: items });
+              break;
+            case 'location':
+              this.setState({ locationInfo: items });
+              break;
+            case 'measurements':
+              this.setState({ measurementInfo: items });
+              break;
+          }
+
+        })
+        .catch(() => this.setState({ hasErrored: true }));
+  }
+
+  componentDidMount() {
+        this.fetchData('https://api.openaq.org/v1/cities?country=GB&limit=1000', 'cities');
+    }
+
+
+  filterCitiesList() {
+
+      return this.state.citiesList.results.filter((item) => item.city === this.state.areaSelected)
+  }
 
   render() {
+
+    if (this.state.hasErrored) {
+            return ( <div className="App">
+                    <AppHeader message="Sorry! There was an error loading the items"/>
+                    </div>);
+        }
+
+    if (this.state.isLoading) {
+            return (<div className="App">
+                    <AppHeader message="Loading..."/>
+                    </div>);
+        }
+
     return (
-      <div className="App">
-        <div className="App-header">
-          <img src={lungs} className="App-logo" alt="logo" />
-          <h2>Air Pollution Data Navigator</h2>
-        </div>
-        <p className="App-intro">
-          Please Select a Location.
-        </p>
-        <form>
-          <CitySelector
-          results={this.state.apiData.results}
-          onChange={this.handleChange}/>
-          <p className="App-intro">
-          Select the Measurement Type.
-        </p>
-          <select className="App-intro" onChange={this.handleMeasureChange}>
-            <option value="no2">Nitrogen Dioxide</option>
-            <option value="o3">Ozone</option>
-            <option value="pm10">Particles &lt; 10&#956;m</option>
-            <option value="pm10">Particles &lt; 25&#956;m</option>
-          </select>
-        </form>
-        <DataOutput />
-      </div>
-    );
+              <div className="App">
+                <AppHeader />
+                <p className="App-intro">
+                  First Select an Area.
+                </p>
+                <form>
+                  <CitySelector
+                  area={this.state.areaSelected}
+                  results={this.state.citiesList.results}
+                  onChange={this.handleChange} />
+                 </form>
+                <LocationInfo area={this.filterCitiesList()}
+                              locData={this.state.locationInfo.results}
+                              onLocationClick={this.handleLocationClick}
+                              onMeasurementClick={this.handleMeasureClick} />
+                <MeasurementOutput measurements={this.state.measurementInfo.results[0]}/>
+              </div>
+            );
   }
+}
+
+
+class AppHeader extends Component {
+
+  render () {
+
+    return (
+              <div className="App-header">
+                <img src={lungs} className="App-logo" alt="logo" />
+                <h2>Air Pollution Data Navigator</h2>
+                 <p>{this.props.message}</p>
+              </div>
+
+                );
+            }
 }
 
 
@@ -129,13 +134,16 @@ class CitySelector extends Component {
   render () {
 
     return (
-            <select
-             className="App-intro"
+            <select className="App-intro"
              onChange={this.props.onChange}
              >
+             <option value="nothing">
+              Please Select
+              </option>
             {this.props.results.map((item) => (
-              <option value={item.location}>
-              {item.location}
+              <option value={item.city} key={item.city}
+                      selected={this.props.area === item.city ? "selected" : null}>
+                  {item.city}
               </option>
               ))}
           </select>
@@ -143,19 +151,36 @@ class CitySelector extends Component {
   }
 }
 
-
-class DataOutput extends Component {
+class MeasurementOutput extends Component {
 
   render () {
+
+    if (this.props.measurements.measurements.length === 0){
+      return <div></div>
+    }
 
     return (
             <div>
               <p className="App-intro">
-                Here's the latest reading:
+                Here are the latest readings for {this.props.measurements.location}:
               </p>
-              <div className="Data">
-                  5 &#956;g/m<sup>3</sup>
-              </div>
+              <table className="locationTable">
+                  <tbody>
+                    <tr>
+                      <th>Measurement Type</th>
+                      <th>Reading</th>
+                      <th>Taken at</th>
+                    </tr>
+                    {this.props.measurements.measurements.map((item) => (
+                    <tr key={item.parameter} className="measurements">
+                        <td>{item.parameter.toUpperCase()}</td>
+                        <td>{item.value} {item.unit}</td>
+                        <td>{item.lastUpdated}</td>
+                    </tr>
+                    ))}
+                  </tbody>
+              </table>
+
             </div>
               );
   }

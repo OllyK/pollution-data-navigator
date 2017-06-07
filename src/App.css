@@ -18,10 +18,27 @@
   font-size: large;
 }
 
-.Data {
-  font-size: 3em;
-  font-style: bold;
+.measurements {
+  font-size: 1.5em;
   color: red;
+  text-align: left;
+}
+
+
+.locationTable {
+  margin-left: auto;
+  margin-right: auto;
+  text-align:center;
+  border-collapse: collapse;
+}
+
+td, th{
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+tr {
+ border-bottom: 1px solid black;
 }
 
 /*@keyframes App-logo-spin {
