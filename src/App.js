@@ -31,6 +31,9 @@ class App extends Component {
   handleLocationClick(e) {
     this.fetchData('https://api.openaq.org/v1/locations?city[]=' + this.state.areaSelected, true)
   }
+   handleMeasureClick (e) {
+    alert(e.target.parentNode.getAttribute("value"));
+  }
 
   fetchData(url, location) {
     this.setState({ isLoading: true });
@@ -90,7 +93,8 @@ class App extends Component {
                  </form>
                 <LocationInfo area={this.filterCitiesList()}
                               locData={this.state.locationInfo.results}
-                              onLocationClick={this.handleLocationClick} />
+                              onLocationClick={this.handleLocationClick}
+                              onMeasurementClick={this.handleMeasureClick} />
               </div>
             );
   }
@@ -126,7 +130,8 @@ class LocationInfo extends Component {
                 There are currently {this.props.area[0].locations} locations in {this.props.area[0].city}
               <br />
               <GetLocationInfoButton onLocationClick={this.props.onLocationClick}/>
-              <LocationInfoDisplay locData={this.props.locData}/>
+              <LocationInfoDisplay locData={this.props.locData}
+                                   handleMeasureClick={this.props.onMeasurementClick}/>
             </div>);
 
       }
@@ -149,26 +154,30 @@ class GetLocationInfoButton extends Component {
 
 class LocationInfoDisplay extends Component {
 
-
   render () {
-          return (<div >
-                  <br />
-                  <table className="Table">
-                      <tr>
-                        <th>Location Name</th>
-                        <th>Coordinates</th>
-                        <th>Sensors</th>
-                      </tr>
-                      {this.props.locData.map((item) => (
-                    <tr value={item.location} key={item.location}>
-                      <td>{item.location}</td>
-                      <td>{item.coordinates.latitude}, {item.coordinates.longitude}</td>
-                      <td>{item.parameters.toString()}</td>
-                    </tr>
-                  ))}
-                    </table>
+          if (this.props.locData.length > 0) {
+                    return (<div >
+                            <br />
+                            <table className="Table">
+                              <tbody>
+                                <tr>
+                                  <th>Location Name</th>
+                                  <th>Coordinates</th>
+                                  <th>Sensors</th>
+                                </tr>
+                                {this.props.locData.map((item) => (
+                              <tr key={item.location}>
+                                <td>{item.location}</td>
+                                <td>{item.coordinates.latitude}, {item.coordinates.longitude}</td>
+                                <td value={item.location}><button onClick={this.props.handleMeasureClick}>{item.parameters.toString()}</button></td>
+                              </tr>
+                            ))}
+                                </tbody>
+                              </table>
 
-                  </div>);
+                            </div>);
+                  };
+            return <div></div>
       }
     }
 
