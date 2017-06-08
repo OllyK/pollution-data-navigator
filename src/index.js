@@ -12,7 +12,7 @@ const store = configureStore(); // You can also pass in an initialState here
 ReactDOM.render(
                 <Provider store={store}>
                     <App />
-                </Provider>
+                </Provider>,
                 document.getElementById('root')
                 );
 registerServiceWorker();
