@@ -16,7 +16,7 @@ export function itemsIsLoading(state = false, action) {
     }
 }
 
-export function cities(state = {}, action) {
+export function cities(state = {"results": []}, action) {
     switch (action.type) {
         case 'CITIES_FETCH_DATA_SUCCESS':
             return action.citiesList;
@@ -25,7 +25,7 @@ export function cities(state = {}, action) {
     }
 }
 
-export function location(state = {}, action) {
+export function location(state = {"results": []}, action) {
     switch (action.type) {
         case 'LOCATION_FETCH_DATA_SUCCESS':
             return action.locationInfo;
@@ -34,7 +34,7 @@ export function location(state = {}, action) {
     }
 }
 
-export function measurement(state = {}, action) {
+export function measurement(state = {"results": [{"measurements": []}]}, action) {
     switch (action.type) {
         case 'MEASUREMENT_FETCH_DATA_SUCCESS':
             return action.measurementInfo;

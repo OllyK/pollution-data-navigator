@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
+import { itemsFetchData, areaSelected, measurementSelected} from './actions/items';
 import lungs from './lungs.svg';
-import {LocationInfo, GetLocationInfoButton, LocationInfoDisplay} from './location.js';
+import {LocationInfo} from './location.js';
 import './App.css';
 
 
@@ -8,15 +11,6 @@ class App extends Component {
 
   constructor() {
     super();
-    this.state = {
-      areaSelected: '',
-      measurementSelected: '',
-      hasErrored: false,
-      isLoading: false,
-      citiesList: {"results": []},
-      locationInfo: {"results": []},
-      measurementInfo: {"results": [{"measurements": []}]}
-    };
     this.handleChange = this.handleChange.bind(this);
     this.handleMeasureChange = this.handleMeasureChange.bind(this);
     this.handleLocationClick = this.handleLocationClick.bind(this);
@@ -24,67 +18,39 @@ class App extends Component {
   }
 
   handleChange(e) {
-      this.setState({areaSelected: e.target.value});
+      this.props.areaSelected(e.target.value);
   }
 
   handleMeasureChange(e) {
-      this.setState({measurementSelected: e.target.value});
+      this.props.measurementSelected(e.target.value);
   }
 
   handleLocationClick(e) {
-    this.fetchData('https://api.openaq.org/v1/locations?city[]=' + this.state.areaSelected, 'location')
+    this.props.fetchData('https://api.openaq.org/v1/locations?city[]=' + this.props.areaSelected, 'location')
   }
   handleMeasureClick (e) {
-    this.fetchData('https://api.openaq.org/v1/latest?location=' + e.target.parentNode.getAttribute("value"), 'measurements')
-  }
-
-  fetchData(url, type) {
-    this.setState({ isLoading: true });
-    fetch(url)
-        .then((response) => {
-            if (!response.ok) {
-                throw Error(response.statusText);
-            }
-            this.setState({ isLoading: false });
-            return response;
-        })
-        .then((response) => response.json())
-        .then((items) => {
-          switch (type) {
-            case 'cities':
-              this.setState({ citiesList: items });
-              break;
-            case 'location':
-              this.setState({ locationInfo: items });
-              break;
-            case 'measurements':
-              this.setState({ measurementInfo: items });
-              break;
-          }
-
-        })
-        .catch(() => this.setState({ hasErrored: true }));
+    this.props.fetchData('https://api.openaq.org/v1/latest?location=' + e.target.parentNode.getAttribute("value"), 'measurements')
   }
 
   componentDidMount() {
-        this.fetchData('https://api.openaq.org/v1/cities?country=GB&limit=1000', 'cities');
+        this.props.fetchData('https://api.openaq.org/v1/cities?country=GB&limit=1000', 'cities');
     }
 
 
   filterCitiesList() {
 
-      return this.state.citiesList.results.filter((item) => item.city === this.state.areaSelected)
+      return this.props.citiesList.results.filter((item) => item.city === this.props.areaSelected)
   }
 
   render() {
 
-    if (this.state.hasErrored) {
+    if (this.props.hasErrored) {
             return ( <div className="App">
                     <AppHeader message="Sorry! There was an error loading the items"/>
                     </div>);
         }
 
-    if (this.state.isLoading) {
+    if (this.props.isLoading) {
             return (<div className="App">
                     <AppHeader message="Loading..."/>
                     </div>);
@@ -98,19 +64,39 @@ class App extends Component {
                 </p>
                 <form>
                   <CitySelector
-                  area={this.state.areaSelected}
-                  results={this.state.citiesList.results}
+                  area={this.props.areaSelected}
+                  results={this.props.citiesList.results}
                   onChange={this.handleChange} />
                  </form>
                 <LocationInfo area={this.filterCitiesList()}
-                              locData={this.state.locationInfo.results}
+                              locData={this.props.locationInfo.results}
                               onLocationClick={this.handleLocationClick}
                               onMeasurementClick={this.handleMeasureClick} />
-                <MeasurementOutput measurements={this.state.measurementInfo.results[0]}/>
+                <MeasurementOutput measurements={this.props.measurementInfo.results[0]}/>
               </div>
             );
   }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        measurementSelected: state.measurementSelected,
+        areaSelected: state.areaSelected,
+        measurementInfo: state.measurementInfo,
+        locationInfo: state.locationInfo,
+        citiesList: state.citiesList,
+        hasErrored: state.itemsHasErrored,
+        isLoading: state.itemsIsLoading
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        fetchData: (url, type) => dispatch(itemsFetchData(url, type)),
+        measurementSelected: (value) => dispatch(measurementSelected(value)),
+        areaSelected: (value) => dispatch(areaSelected(value))
+    };
+};
 
 
 class AppHeader extends Component {
@@ -186,4 +172,4 @@ class MeasurementOutput extends Component {
   }
 }
 
-export default App;
+export default connect(mapStateToProps, mapDispatchToProps)(App)

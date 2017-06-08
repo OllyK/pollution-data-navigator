@@ -65,13 +65,13 @@ export function itemsFetchData(url, type) {
             .then((items) => {
             switch (type) {
                 case 'cities':
-                  dispatch(citiesFetchDataSuccess(items);
+                  dispatch(citiesFetchDataSuccess(items));
                   break;
                 case 'location':
-                  dispatch(locationFetchDataSuccess(items);
+                  dispatch(locationFetchDataSuccess(items));
                   break;
                 case 'measurements':
-                  dispatch(measurementsFetchDataSuccess(items);
+                  dispatch(measurementFetchDataSuccess(items));
                   break;
           }
 
